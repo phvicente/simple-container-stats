@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  web:
+    image: httpd:latest
+    container_name: apache_server
+    volumes:
+      - ./app:/usr/local/apache2/htdocs/
+    ports:
+      - '80:80'
+
+  stats_api:
+    image: openjdk:11-jdk-slim
+    container_name: stats_api
+    volumes:
+      - ./api:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /app
+    command: ["./gradlew", "run"]
+    ports:
+      - '5000:5000'

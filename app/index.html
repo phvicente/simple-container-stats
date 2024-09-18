@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Estatísticas do Container</title>
+    <style>
+        table {
+            width: 50%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+<h1>Estatísticas do Container</h1>
+<table>
+    <tr>
+        <th>Estatística</th>
+        <th>Valor</th>
+    </tr>
+    <tr>
+        <td>Uso de CPU</td>
+        <td id="cpuUsage">Carregando...</td>
+    </tr>
+    <tr>
+        <td>Uso de Memória</td>
+        <td id="memoryUsage">Carregando...</td>
+    </tr>
+    <tr>
+        <td>Limite de Memória</td>
+        <td id="memoryLimit">Carregando...</td>
+    </tr>
+    <tr>
+        <td>Bytes Recebidos (Rede)</td>
+        <td id="rxBytes">Carregando...</td>
+    </tr>
+    <tr>
+        <td>Bytes Enviados (Rede)</td>
+        <td id="txBytes">Carregando...</td>
+    </tr>
+</table>
+
+<script>
+    fetch('http://localhost:5000/stats')
+        .then(response => response.json())
+        .then(data => {
+
+            const cpuDelta = data.cpu_stats.cpu_usage.total_usage - data.precpu_stats.cpu_usage.total_usage;
+            const systemCpuDelta = data.cpu_stats.system_cpu_usage - data.precpu_stats.system_cpu_usage;
+            const numberCpus = data.cpu_stats.online_cpus;
+            let cpuUsagePercent = 0;
+
+            if (systemCpuDelta > 0 && cpuDelta > 0) {
+                cpuUsagePercent = (cpuDelta / systemCpuDelta) * numberCpus * 100;
+            }
+
+            const memoryUsageMB = (data.memory_stats.usage / (1024 * 1024)).toFixed(2);
+            const memoryLimitMB = (data.memory_stats.limit / (1024 * 1024)).toFixed(2);
+
+            const rxBytes = data.networks.eth0.rx_bytes;
+            const txBytes = data.networks.eth0.tx_bytes;
+
+            document.getElementById('cpuUsage').innerText = cpuUsagePercent.toFixed(2) + ' %';
+            document.getElementById('memoryUsage').innerText = memoryUsageMB + ' MB';
+            document.getElementById('memoryLimit').innerText = memoryLimitMB + ' MB';
+            document.getElementById('rxBytes').innerText = rxBytes + ' bytes';
+            document.getElementById('txBytes').innerText = txBytes + ' bytes';
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            document.getElementById('cpuUsage').innerText = 'Erro ao carregar';
+            document.getElementById('memoryUsage').innerText = 'Erro ao carregar';
+            document.getElementById('memoryLimit').innerText = 'Erro ao carregar';
+            document.getElementById('rxBytes').innerText = 'Erro ao carregar';
+            document.getElementById('txBytes').innerText = 'Erro ao carregar';
+        });
+</script>
+</body>
+</html>
